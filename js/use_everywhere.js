@@ -310,6 +310,7 @@ app.registerExtension({
         nodeType.prototype.onConnectInput = function(targetSlot, type, output, originNode, originSlot) {
             if (is_combo_to_string(nodeType)) {
                 const source = originNode.outputs[originSlot]
+                if (source.type=='*') return false;
                 this.inputs[0].widget.config = getWidgetConfig(source)
                 return null;
             } else {
