@@ -246,6 +246,12 @@ function is_helper(node_or_nodeType) {
     if (title===undefined) return false;
     return (title.startsWith("Simple String"))
 }
+function is_combo_to_string(node_or_nodeType){
+    var title = node_or_nodeType.type;
+    if (title===undefined) title = node_or_nodeType.comfyClass;
+    if (title===undefined) return false;
+    return (title.startsWith("Combo to String"))
+}
 function has_priority_boost(node_or_nodeType) {
     var title = node_or_nodeType.type;
     if (title===undefined) title = node_or_nodeType.comfyClass;
@@ -268,4 +274,4 @@ function inject(object, methodname, tracetext, injection, injectionthis, injecti
 }
 
 
-export { node_in_loop, handle_bypass, node_is_live, is_connected, is_UEnode, is_helper, inject, Logger, get_real_node, get_group_node, get_all_nodes_within, has_priority_boost}
+export { node_in_loop, handle_bypass, node_is_live, is_connected, is_UEnode, is_helper, is_combo_to_string, inject, Logger, get_real_node, get_group_node, get_all_nodes_within, has_priority_boost}

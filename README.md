@@ -36,6 +36,9 @@ UE nodes mostly work with group nodes. But there are a couple of important thing
 
 ## Latest updates
 
+4.9 (April 2024)
+- Support for COMBOs (kinda)
+
 4.8 (18th March 2024)
 - Group and color sending have a `send to unmatched` mode
 - UE link animations can be the classic dots, or a pulsing glow (or both, or neither)
@@ -132,17 +135,16 @@ Prompt Everywhere has two inputs. They will be sent with regex matching rules of
 |-|-|
 |![pe](docs/PE.png)|![pe](docs/conditioning.png)
 
-# Primitives and COMBOs and the like
-
-UE nodes don't work with primitives and COMBOs (the data type used for dropdown lists, which are also a type of primitive within Comfy). It's unlikely they ever will. 
-
-If you want to use UE to control sampler or sigma, you can do this with the built in `SamplerCustom` nodes:
-
-![sample and sigma](docs/sampler%20and%20sigma.png)
-
-For more on this, see [this discussion](https://github.com/chrisgoringe/cg-use-everywhere/issues/69)
-
 # Other features
+
+## COMBOs
+
+I said I'd never support them... but with thanks due to [Jorge91](https://github.com/JorgeR81) for the idea and [Suzie1](https://github.com/Suzie1) for the great [Comfyroll nodes](https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes) which gave me a key insight, there are now a pair of nodes `Combo to String` and `String to Combo` that allow you to broadcast the value of a combo as a string. To make this work:
+
+- Convert a dropdown widget (eg sampler_name) to an input
+- Double-click the newly created input dot to create a primitive combo node
+- Connect that to a `Combo to String` 
+- You can now disconnect from the original node, and even delete it
 
 ## Show links - visualisation and animation.
 

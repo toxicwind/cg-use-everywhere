@@ -1,7 +1,8 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { getWidgetConfig } from "../../extensions/core/widgetInputs.js"; 
 
-import { is_UEnode, is_helper, inject, Logger, get_real_node } from "./use_everywhere_utilities.js";
+import { is_UEnode, is_helper, inject, Logger, get_real_node, is_combo_to_string } from "./use_everywhere_utilities.js";
 import { displayMessage, update_input_label, indicate_restriction } from "./use_everywhere_ui.js";
 import { LinkRenderController } from "./use_everywhere_ui.js";
 import { autoCreateMenu } from "./use_everywhere_autocreate.js";
@@ -242,8 +243,6 @@ app.registerExtension({
             },
             set : function(v) { original_allow_searchbox = v; }
         });
-        
-
 	},
 
     init() {
@@ -270,3 +269,90 @@ app.registerExtension({
     }
 
 });
+
+app.registerExtension({
+	name: "cg.customnodes.use_everywhere.combo",
+
+    async setup() {
+        /* Modify primitive nodes to allow them to connect to Combo to String */
+        const onConnectOutput = LiteGraph.registered_node_types.PrimitiveNode.prototype.onConnectOutput;
+        LiteGraph.registered_node_types.PrimitiveNode.prototype.onConnectOutput = function(slot, type, input, target_node, target_slot) {
+            if (is_combo_to_string(target_node)) {
+                target_node.inputs[target_slot].widget.config = getWidgetConfig(this.outputs[slot])
+                return null;
+            }
+            return onConnectOutput?.apply(this,arguments)
+        }
+    },
+
+    async nodeCreated(node) {
+        /* 
+        Combo to String has a fake widget to allow primitive nodes to push data into. 
+        Add a fake widget to the input if needed
+        */
+        if (is_combo_to_string(node)) {
+            if (node.inputs) {
+                const fake_widget = { name:"anything",  }
+                node.inputs[0].widget = fake_widget
+                node.widgets = [ fake_widget ]
+            } else {
+                console.log("No inputs")
+            }
+        }
+    }, 
+
+    async beforeRegisterNodeDef(nodeType, nodeData, app) {
+        /* 
+        if it's a combo to string node, allow the connection,
+        and store the array of options in our config
+        */
+        const onConnectInput = nodeType.prototype.onConnectInput;
+        nodeType.prototype.onConnectInput = function(targetSlot, type, output, originNode, originSlot) {
+            if (is_combo_to_string(nodeType)) {
+                const source = originNode.outputs[originSlot]
+                this.inputs[0].widget.config = getWidgetConfig(source)
+                return null;
+            } else {
+                return onConnectInput.apply(this, arguments)
+            }
+        }
+
+        /*
+        If we get an array of options, put it into the data
+        */
+        const onConfigure = nodeType.prototype.onConfigure;
+        nodeType.prototype.onConfigure = function(info) {
+            const r = onConfigure ? onConfigure.apply(this, arguments) : undefined;
+            if (is_combo_to_string(nodeType)) {
+                this.widget_config_info = info?.inputs?.[0]?.widget?.config
+            }
+            return r;
+        }
+
+        /*
+        After the graph is configured, if we have a widget_config_info, 
+        apply it 
+        */
+        const onGraphConfigured = nodeType.prototype.onGraphConfigured;
+        nodeType.prototype.onGraphConfigured = function() {
+            onGraphConfigured?.apply(this, arguments);
+            if (is_combo_to_string(this) && this.widget_config_info) {
+                this.inputs[0].widget.config = this.widget_config_info
+                setTimeout(later_on.bind(this), 100)
+            }
+        }
+
+        const later_on = function() {
+            if (!this.inputs?.[0]?.link) return;
+            const link = app.graph.links[this.inputs[0].link]
+            const org_node = app.graph._nodes_by_id[link.origin_id] // the primitive node
+            const stored_value = org_node.widgets?.[0]?.value
+            org_node.widgets = null // delete its widgets, so it thinks it's brand new
+            this.constructor.nodeData = {input:{required:{anything:this.widget_config_info}}} // hack the config
+            org_node.onConnectionsChange(2,0,true)
+            org_node.widgets[0].value = stored_value
+            this.inputs[0].widget.value = stored_value
+        }
+    }, 
+
+})

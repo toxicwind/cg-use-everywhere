@@ -84,3 +84,35 @@ class AnythingSomewhere(Base):
         for key in kwargs:
             message(id, kwargs[key],)
         return ()
+
+class AnyType(str):
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+class StringToCombo:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return { "required": { "text": ("STRING", {"multiline": False, "default": "", "forceInput": True}), }, }
+
+    FUNCTION = "func"
+    CATEGORY = "everywhere"
+
+    RETURN_TYPES = (AnyType("*"), )
+    RETURN_NAMES = ("any", )
+    
+    def func(self, text):
+        return (text, )
+    
+class ComboToString:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return { "required": { "anything": ("*", ), }, }
+
+    FUNCTION = "func"
+    CATEGORY = "everywhere"
+
+    RETURN_TYPES = ("STRING", )
+    RETURN_NAMES = ("string", )
+    
+    def func(self, anything):
+        return (f"{anything}", )    
