@@ -21,7 +21,6 @@ class UseEverywhere {
     constructor() {
         this.sending_to = [];
         Object.assign(this, arguments[0]);
-        if (this.priority === undefined) this.priority = 0;
         this.description = `source ${this?.output[0]}.${this?.output[1]} -> control ${this?.controller.id}.${this?.control_node_input_index} "${this.type}" <-  (priority ${this.priority})`;
         if (this.title_regex) this.description += ` - node title regex '${this.title_regex.source}'`;
         if (this.input_regex) this.description += ` - input name regex '${this.input_regex.source}'`;
@@ -110,6 +109,7 @@ class UseEverywhereList {
             group_regex: group_regex,
             priority: priority
         };
+        if (!params.priority) params.priority = 0;
         const real_node = get_real_node(node.id);
         if (!real_node) {
             Logger.log(Logger.PROBLEM, `Node ${node.id} not found`, params);
